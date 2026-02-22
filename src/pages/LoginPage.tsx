@@ -1,16 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    navigate('/home');
+    setError('');
+    setLoading(true);
+    
+    try {
+      await login(username, password);
+      navigate('/home');
+    } catch (err: any) {
+      setError(err.message || '登录失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,6 +71,11 @@ export default function LoginPage() {
 
         <main className="w-full">
           <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-2 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
             <div className="group flex items-center bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 focus-within:border-[#f58220] focus-within:ring-2 focus-within:ring-[#f58220]/20 transition-all duration-300 h-12">
               <div className="w-12 h-full flex items-center justify-center bg-slate-50 border-r border-slate-100">
                 <span className="material-symbols-outlined text-slate-400 text-xl group-focus-within:text-[#f58220] transition-colors">person</span>
@@ -96,10 +113,10 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <button className="relative overflow-hidden w-full bg-gradient-to-r from-[#f9a34b] to-[#f58220] text-white font-bold h-12 rounded-xl shadow-[0_0_20px_rgba(245,130,32,0.3)] hover:shadow-[0_0_30px_rgba(245,130,32,0.5)] active:scale-[0.98] transition-all mt-6 text-base tracking-widest group" type="submit">
+            <button className="relative overflow-hidden w-full bg-gradient-to-r from-[#f9a34b] to-[#f58220] text-white font-bold h-12 rounded-xl shadow-[0_0_20px_rgba(245,130,32,0.3)] hover:shadow-[0_0_30px_rgba(245,130,32,0.5)] active:scale-[0.98] transition-all mt-6 text-base tracking-widest group disabled:opacity-50 disabled:cursor-not-allowed" type="submit" disabled={loading}>
               <span className="relative z-10 flex items-center justify-center gap-2">
-                立即登入
-                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">login</span>
+                {loading ? '登入中...' : '立即登入'}
+                {!loading && <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">login</span>}
               </span>
             </button>
           </form>

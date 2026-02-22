@@ -9,6 +9,10 @@ out/
 .vite/
 .parcel-cache/
 
+# Database
+*.db
+data.db
+
 # Env files
 .env
 .env.*.local
