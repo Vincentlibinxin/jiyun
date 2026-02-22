@@ -72,12 +72,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-[430px] px-8 flex flex-col h-full justify-center">
         <header className="flex flex-col items-center mb-8">
-          <div className="relative w-24 h-24 mb-4 bg-slate-800/40 backdrop-blur-md rounded-3xl border border-white/10 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-center p-4">
-            <div className="flex flex-col items-center drop-shadow-lg">
-              <span className="material-symbols-outlined text-4xl text-green-500 leading-none mb-[-4px]">park</span>
-              <span className="material-symbols-outlined text-5xl text-blue-500 leading-none">link</span>
-            </div>
-            <div className="absolute top-2 right-3 w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
+          <div className="relative w-32 h-32 mb-4 bg-slate-800/40 backdrop-blur-md rounded-3xl border border-white/10 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-center p-4 overflow-hidden">
+            <img src="/logo.png" alt="榕台海峡快运 LOGO" className="w-full h-full object-contain drop-shadow-lg" />
           </div>
           
           <div className="text-center">
