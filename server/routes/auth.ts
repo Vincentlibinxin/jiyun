@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createUser, getUserByUsername, getUserByPhone, getUserById, createOTP, getOTP, verifyOTP } from '../db';
+import { createUser, getUserByUsername, getUserByPhone, getUserById, createOTP, getOTP, verifyOTP, getLatestOTP } from '../db';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'rongtai-secret-key-2026';
@@ -31,41 +31,54 @@ const convertPhoneToE164 = (phone: string): string => {
 };
 
 // 通过SUBMAIL发送短信验证码
-const sendSMSVerification = async (phone: string, code: string): Promise<boolean> => {
+const sendSMSVerification = async (phone: string, code: string): Promise<{ success: boolean; error?: string }> => {
   if (!SUBMAIL_APPID || !SUBMAIL_APPKEY) {
-    console.error('SUBMAIL credentials not configured');
-    return false;
+    const error = 'SUBMAIL credentials not configured';
+    console.error(error);
+    return { success: false, error };
   }
 
   const phoneE164 = convertPhoneToE164(phone);
   const content = `【榕台海峽快運】您的驗證碼：${code}，請在10分鐘內輸入。`;
 
   try {
+    console.log('Sending SMS to:', phoneE164);
+    console.log('APPID:', SUBMAIL_APPID);
+    
+    const body = new URLSearchParams({
+      appid: SUBMAIL_APPID,
+      to: phoneE164,
+      content,
+      signature: SUBMAIL_APPKEY,
+    }).toString();
+    
+    console.log('Request body:', body);
+
     const response = await fetch(SUBMAIL_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        appid: SUBMAIL_APPID,
-        to: phoneE164,
-        content,
-        signature: SUBMAIL_APPKEY,
-      }).toString(),
+      body,
     });
 
+    console.log('Response status:', response.status);
+    
     const data = await response.json() as any;
+    console.log('Response data:', JSON.stringify(data, null, 2));
     
     if (data.status === 'success') {
       console.log('SMS sent successfully:', data.send_id);
-      return true;
+      return { success: true };
     } else {
-      console.error('SMS sending failed:', data);
-      return false;
+      const errorMsg = `SUBMAIL error: ${data.status} - ${data.msg || data.error || JSON.stringify(data)}`;
+      console.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   } catch (error) {
-    console.error('SMS API error:', error);
-    return false;
+    const errorMsg = `SMS API error: ${error instanceof Error ? error.message : String(error)}`;
+    console.error(errorMsg);
+    return { success: false, error: errorMsg };
   }
 };
 
@@ -96,15 +109,24 @@ router.post('/send-sms', async (req: Request, res: Response): Promise<void> => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分钟后过期
 
     // 保存验证码到数据库
-    createOTP.run(phone, code, expiresAt.toISOString());
+    try {
+      createOTP.run(phone, code, expiresAt.toISOString());
+      console.log(`OTP created for ${phone}: ${code}`);
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      res.status(500).json({ error: '数据库错误，请稍后重试' });
+      return;
+    }
 
     // 发送短信
-    const smsSent = await sendSMSVerification(phone, code);
-    if (!smsSent) {
+    const result = await sendSMSVerification(phone, code);
+    if (!result.success) {
+      console.error(`Failed to send SMS to ${phone}:`, result.error);
       res.status(500).json({ error: '发送验证码失败，请稍后重试' });
       return;
     }
 
+    console.log(`SMS sent successfully to ${phone}`);
     res.json({ message: '验证码已发送' });
   } catch (error) {
     console.error('Send SMS error:', error);
@@ -193,8 +215,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       }
 
       // 检查手机号是否已验证
-      const verifiedOTP = getOTP.get(phone, '') as any;
-      const latestOTP = (require('../db').getLatestOTP).get(phone) as any;
+      const latestOTP = getLatestOTP.get(phone) as any;
       
       if (!latestOTP || !latestOTP.verified) {
         res.status(400).json({ error: '请先验证手机号码' });

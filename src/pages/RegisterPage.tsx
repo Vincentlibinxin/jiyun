@@ -77,7 +77,8 @@ export default function RegisterPage() {
         });
       }, 1000);
     } catch (err: any) {
-      setError(err.message || '发送验证码失败');
+      console.error('发送短信错误:', err);
+      setError(err?.message || '发送验证码失败，请稍后重试');
     } finally {
       setSmsSending(false);
     }
@@ -96,7 +97,8 @@ export default function RegisterPage() {
       setCodeVerified(true);
       setError('');
     } catch (err: any) {
-      setError(err.message || '验证码无效');
+      console.error('验证码错误:', err);
+      setError(err?.message || '验证码无效或已过期');
     }
   };
 
@@ -138,7 +140,19 @@ export default function RegisterPage() {
       await register(username, password, phone);
       navigate('/register-success');
     } catch (err: any) {
-      setError(err.message || '注册失败');
+      console.error('注册错误:', err);
+      // 处理不同类型的错误
+      if (err?.message?.includes('用户名')) {
+        setError(err.message);
+      } else if (err?.message?.includes('密码')) {
+        setError(err.message);
+      } else if (err?.message?.includes('手机')) {
+        setError(err.message);
+      } else if (err?.message?.includes('验证')) {
+        setError(err.message);
+      } else {
+        setError(err?.message || '注册失败，请稍后重试');
+      }
     } finally {
       setLoading(false);
     }
