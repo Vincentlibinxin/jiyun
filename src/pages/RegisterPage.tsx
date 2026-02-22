@@ -1,28 +1,134 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsSent, setSmsSent] = useState(false);
+  const [codeVerified, setCodeVerified] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  const validateUsername = (username: string): string | null => {
+    if (username.length < 6) {
+      return '用户名至少6个字符';
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      return '用户名只能包含字母和数字';
+    }
+    return null;
+  };
+
+  const validatePhone = (phone: string): string | null => {
+    if (!/^09\d{8}$/.test(phone)) {
+      return '请输入10位手机号码（09开头）';
+    }
+    return null;
+  };
+
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) {
+      return '密码至少8个字符';
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return '密码必须包含至少一个大写字母';
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return '密码必须包含至少一个小写字母';
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return '密码必须包含至少一个数字';
+    }
+    return null;
+  };
+
+  const handleSendSMS = async () => {
+    setError('');
+    
+    const phoneError = validatePhone(phone);
+    if (phoneError) {
+      setError(phoneError);
+      return;
+    }
+
+    setSmsSending(true);
+    try {
+      await api.auth.sendSMS(phone);
+      setSmsSent(true);
+      setCountdown(60);
+      
+      // 倒计时
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || '发送验证码失败');
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setError('');
+    
+    if (!verificationCode.trim()) {
+      setError('请输入验证码');
+      return;
+    }
+
+    try {
+      await api.auth.verifyCode(phone, verificationCode);
+      setCodeVerified(true);
+      setError('');
+    } catch (err: any) {
+      setError(err.message || '验证码无效');
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
       return;
     }
 
-    if (password.length < 6) {
-      setError('密码长度至少6个字符');
+    const phoneError = validatePhone(phone);
+    if (phoneError) {
+      setError(phoneError);
+      return;
+    }
+
+    if (!codeVerified) {
+      setError('请先验证手机号码');
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('两次输入的密码不一致');
       return;
     }
 
@@ -70,7 +176,7 @@ export default function RegisterPage() {
               </span>
               <input 
                 className="w-full pl-9 pr-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
-                placeholder="設置您的登錄用戶名" 
+                placeholder="6位以上字母+數字" 
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -85,21 +191,69 @@ export default function RegisterPage() {
               手機號碼
             </label>
             <div className="flex gap-2">
-              <button type="button" className="flex items-center gap-1 px-3 py-3 bg-white text-slate-700 rounded-lg shadow-sm shrink-0 border border-slate-200">
-                <span className="text-sm font-bold">+86</span>
-                <span className="material-symbols-outlined text-[14px] text-slate-400">expand_more</span>
-              </button>
               <div className="relative flex-1 group">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#f48c25] transition-colors z-10">
+                  <span className="material-symbols-outlined text-[18px]">phone</span>
+                </span>
                 <input 
-                  className="w-full px-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
-                  placeholder="請輸入手機號碼" 
+                  className="w-full pl-9 pr-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
+                  placeholder="09xxxxxxxx (10位手機號)" 
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  maxLength="10"
+                  disabled={codeVerified}
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleSendSMS}
+                disabled={smsSending || !phone || codeVerified || countdown > 0}
+                className="px-3 py-3 bg-[#f48c25] text-white rounded-lg font-bold text-xs whitespace-nowrap hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {countdown > 0 ? `${countdown}秒` : smsSent ? '重新發送' : '發送驗證碼'}
+              </button>
             </div>
           </div>
+
+          {smsSent && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-[#f48c25]"></span>
+                驗證碼
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1 group">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#f48c25] transition-colors z-10">
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
+                  </span>
+                  <input 
+                    className="w-full pl-9 pr-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
+                    placeholder="請輸入6位驗證碼" 
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.slice(0, 6))}
+                    maxLength="6"
+                    disabled={codeVerified}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={!verificationCode || codeVerified}
+                  className="px-3 py-3 bg-green-500 text-white rounded-lg font-bold text-xs whitespace-nowrap hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {codeVerified ? '已驗證' : '驗證'}
+                </button>
+              </div>
+              {codeVerified && (
+                <div className="text-green-400 text-xs flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                  手機號碼已驗證
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-1">
             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1">
@@ -112,7 +266,7 @@ export default function RegisterPage() {
               </span>
               <input 
                 className="w-full pl-9 pr-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
-                placeholder="設置至少6位字符密碼" 
+                placeholder="至少8位（含大小寫字母和數字）" 
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

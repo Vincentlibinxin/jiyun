@@ -17,8 +17,19 @@ db.exec(`
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS otp_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    phone TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    verified BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
   CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+  CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_codes(phone);
+  CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_codes(expires_at);
 `);
 
 export interface User {
@@ -54,6 +65,29 @@ export const updateUser = db.prepare(`
   UPDATE users 
   SET real_name = ?, address = ?, updated_at = CURRENT_TIMESTAMP
   WHERE id = ?
+`);
+
+export const createOTP = db.prepare(`
+  INSERT INTO otp_codes (phone, code, expires_at)
+  VALUES (?, ?, ?)
+`);
+
+export const getOTP = db.prepare(`
+  SELECT * FROM otp_codes 
+  WHERE phone = ? AND code = ? AND expires_at > datetime('now') AND verified = 0
+  ORDER BY created_at DESC LIMIT 1
+`);
+
+export const verifyOTP = db.prepare(`
+  UPDATE otp_codes 
+  SET verified = 1 
+  WHERE phone = ? AND code = ? AND expires_at > datetime('now')
+`);
+
+export const getLatestOTP = db.prepare(`
+  SELECT * FROM otp_codes 
+  WHERE phone = ? AND expires_at > datetime('now')
+  ORDER BY created_at DESC LIMIT 1
 `);
 
 export default db;

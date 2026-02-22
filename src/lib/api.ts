@@ -61,6 +61,18 @@ export const api = {
 
     getMe: () =>
       request<{ user: User }>('/auth/me'),
+
+    sendSMS: (phone: string) =>
+      request<{ message: string }>('/auth/send-sms', {
+        method: 'POST',
+        body: JSON.stringify({ phone }),
+      }),
+
+    verifyCode: (phone: string, code: string) =>
+      request<{ message: string }>('/auth/verify-code', {
+        method: 'POST',
+        body: JSON.stringify({ phone, code }),
+      }),
   },
 
   user: {

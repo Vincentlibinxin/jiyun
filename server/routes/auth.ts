@@ -1,11 +1,16 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createUser, getUserByUsername, getUserByPhone, getUserById } from '../db';
+import { createUser, getUserByUsername, getUserByPhone, getUserById, createOTP, getOTP, verifyOTP } from '../db';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'rongtai-secret-key-2026';
 const JWT_EXPIRES = '7d';
+
+// SUBMAIL配置
+const SUBMAIL_APPID = process.env.SUBMAIL_APPID || '';
+const SUBMAIL_APPKEY = process.env.SUBMAIL_APPKEY || '';
+const SUBMAIL_API = 'https://api-v4.mysubmail.com/internationalsms/send.json';
 
 interface AuthRequest extends Request {
   userId?: number;
@@ -14,6 +19,130 @@ interface AuthRequest extends Request {
 export const generateToken = (userId: number): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 };
+
+// 生成6位数字验证码
+const generateOTPCode = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// 将台湾手机号转换为E164格式
+const convertPhoneToE164 = (phone: string): string => {
+  return '+886' + phone.substring(1); // 09xxx -> +8869xxx
+};
+
+// 通过SUBMAIL发送短信验证码
+const sendSMSVerification = async (phone: string, code: string): Promise<boolean> => {
+  if (!SUBMAIL_APPID || !SUBMAIL_APPKEY) {
+    console.error('SUBMAIL credentials not configured');
+    return false;
+  }
+
+  const phoneE164 = convertPhoneToE164(phone);
+  const content = `【榕台海峽快運】您的驗證碼：${code}，請在10分鐘內輸入。`;
+
+  try {
+    const response = await fetch(SUBMAIL_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        appid: SUBMAIL_APPID,
+        to: phoneE164,
+        content,
+        signature: SUBMAIL_APPKEY,
+      }).toString(),
+    });
+
+    const data = await response.json() as any;
+    
+    if (data.status === 'success') {
+      console.log('SMS sent successfully:', data.send_id);
+      return true;
+    } else {
+      console.error('SMS sending failed:', data);
+      return false;
+    }
+  } catch (error) {
+    console.error('SMS API error:', error);
+    return false;
+  }
+};
+
+router.post('/send-sms', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      res.status(400).json({ error: '手机号码不能为空' });
+      return;
+    }
+
+    // 验证手机号格式
+    if (!/^09\d{8}$/.test(phone)) {
+      res.status(400).json({ error: '请输入有效的手机号码' });
+      return;
+    }
+
+    // 检查手机号是否已被注册
+    const existingUser = getUserByPhone.get(phone);
+    if (existingUser) {
+      res.status(400).json({ error: '手机号已被注册' });
+      return;
+    }
+
+    // 生成验证码
+    const code = generateOTPCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分钟后过期
+
+    // 保存验证码到数据库
+    createOTP.run(phone, code, expiresAt.toISOString());
+
+    // 发送短信
+    const smsSent = await sendSMSVerification(phone, code);
+    if (!smsSent) {
+      res.status(500).json({ error: '发送验证码失败，请稍后重试' });
+      return;
+    }
+
+    res.json({ message: '验证码已发送' });
+  } catch (error) {
+    console.error('Send SMS error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+router.post('/verify-code', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { phone, code } = req.body;
+
+    if (!phone || !code) {
+      res.status(400).json({ error: '手机号码和验证码不能为空' });
+      return;
+    }
+
+    // 验证手机号格式
+    if (!/^09\d{8}$/.test(phone)) {
+      res.status(400).json({ error: '请输入有效的手机号码' });
+      return;
+    }
+
+    // 查询验证码
+    const otp = getOTP.get(phone, code) as any;
+    if (!otp) {
+      res.status(400).json({ error: '验证码无效或已过期' });
+      return;
+    }
+
+    // 标记验证码为已验证
+    verifyOTP.run(phone, code);
+
+    res.json({ message: '验证码验证成功' });
+  } catch (error) {
+    console.error('Verify code error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
 
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -24,13 +153,23 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (username.length < 3 || username.length > 20) {
-      res.status(400).json({ error: '用户名长度需在3-20个字符之间' });
+    if (username.length < 6) {
+      res.status(400).json({ error: '用户名至少6个字符' });
       return;
     }
 
-    if (password.length < 6) {
-      res.status(400).json({ error: '密码长度至少6个字符' });
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      res.status(400).json({ error: '用户名只能包含字母和数字' });
+      return;
+    }
+
+    if (password.length < 8) {
+      res.status(400).json({ error: '密码至少8个字符' });
+      return;
+    }
+
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+      res.status(400).json({ error: '密码必须包含大写字母、小写字母和数字' });
       return;
     }
 
@@ -41,9 +180,24 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
 
     if (phone) {
+      // 验证手机号格式
+      if (!/^09\d{8}$/.test(phone)) {
+        res.status(400).json({ error: '请输入有效的手机号码' });
+        return;
+      }
+
       const existingPhone = getUserByPhone.get(phone);
       if (existingPhone) {
         res.status(400).json({ error: '手机号已被注册' });
+        return;
+      }
+
+      // 检查手机号是否已验证
+      const verifiedOTP = getOTP.get(phone, '') as any;
+      const latestOTP = (require('../db').getLatestOTP).get(phone) as any;
+      
+      if (!latestOTP || !latestOTP.verified) {
+        res.status(400).json({ error: '请先验证手机号码' });
         return;
       }
     }
