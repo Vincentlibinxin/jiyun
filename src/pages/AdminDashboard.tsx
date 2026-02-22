@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '../components/Pagination';
 
 interface User {
   id: number;
@@ -52,15 +53,16 @@ export default function AdminDashboard() {
     fetchOrders();
   }, [token, navigate]);
 
-  const fetchUsers = async (page: number = 1) => {
+  const fetchUsers = async (page: number = 1, size: number = pageSize) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/admin/users?page=${page}&limit=${pageSize}`, {
+      const response = await fetch(`http://localhost:3001/api/admin/users?page=${page}&limit=${size}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       setUsers(data.data || []);
       setCurrentPage(page);
+      setPageSize(size);
       setTotalPages(data.pagination?.pages || 1);
       setStats(prev => ({ ...prev, totalUsers: data.pagination?.total || 0 }));
     } catch (err) {
@@ -68,6 +70,12 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    fetchUsers(1, newSize);
   };
 
   const fetchOrders = async () => {
@@ -421,56 +429,15 @@ export default function AdminDashboard() {
 
               {/* 分頁控件 */}
               {users.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    第 <span className="font-semibold text-gray-700">{currentPage}</span> / <span className="font-semibold text-gray-700">{totalPages}</span> 頁 · 共 <span className="font-semibold text-gray-700">{stats.totalUsers}</span> 條記錄
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => fetchUsers(1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      首頁
-                    </button>
-                    <button
-                      onClick={() => fetchUsers(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      上一頁
-                    </button>
-                    <div className="flex items-center gap-2 px-4">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button
-                          key={page}
-                          onClick={() => fetchUsers(page)}
-                          className={`px-3 py-2 rounded text-sm transition-colors ${
-                            currentPage === page
-                              ? 'bg-blue-500 text-white'
-                              : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => fetchUsers(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      下一頁
-                    </button>
-                    <button
-                      onClick={() => fetchUsers(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      末頁
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={stats.totalUsers}
+                  pageSize={pageSize}
+                  pageSizeOptions={[10, 20, 30, 50]}
+                  onPageChange={fetchUsers}
+                  onPageSizeChange={handlePageSizeChange}
+                />
               )}
             </div>
           )}

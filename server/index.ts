@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import { authMiddleware } from './middleware/auth';
@@ -15,6 +16,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// 提供靜態文件服務（Layui 資源和管理系統 HTML）
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);

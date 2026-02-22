@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>榕台海峽快運 - 後台管理系統</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .layui-layout {
+            background-color: #fff;
+        }
+
+        /* 頂部導航欄 */
+        .layui-header {
+            background-color: #012e7d;
+            color: #fff;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo i {
+            font-size: 24px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .admin-info i {
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            background-color: #ff4444;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #dd0000;
+        }
+
+        /* 側邊欄 */
+        .layui-side {
+            background-color: #f0f0f0;
+            width: 200px;
+            position: fixed;
+            left: 0;
+            top: 60px;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 999;
+        }
+
+        .layui-side-scroll {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background-color: #e8e8e8;
+            border-left-color: #012e7d;
+        }
+
+        .nav-item.active {
+            background-color: #e3f2fd;
+            border-left-color: #012e7d;
+            color: #012e7d;
+            font-weight: bold;
+        }
+
+        .nav-title {
+            padding: 12px 20px;
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* 主內容區域 */
+        .layui-body {
+            margin-left: 200px;
+            margin-top: 60px;
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* 卡片樣式 */
+        .stats-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stats-card-content {
+            flex: 1;
+        }
+
+        .stats-card-title {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .stats-card-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stats-card-icon {
+            font-size: 48px;
+            color: #f0f0f0;
+        }
+
+        /* 表格容器 */
+        .content-box {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* 搜索欄 */
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            padding: 8px 20px;
+            background-color: #012e7d;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-box button:hover {
+            background-color: #0a1f4f;
+        }
+
+        /* 操作按鈕 */
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .action-btn.danger {
+            color: #ff4444;
+            border-color: #ff4444;
+        }
+
+        .action-btn.danger:hover {
+            background-color: #ff4444;
+            color: #fff;
+        }
+
+        /* 分頁樣式 */
+        .pagination-box {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background-color: #f0f0f0;
+        }
+
+        .page-btn.active {
+            background-color: #012e7d;
+            color: #fff;
+            border-color: #012e7d;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 標籤 */
+        .layui-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background-color: #4caf50;
+            color: #fff;
+        }
+
+        .badge-warning {
+            background-color: #ff9800;
+            color: #fff;
+        }
+
+        .badge-danger {
+            background-color: #f44336;
+            color: #fff;
+        }
+
+        .badge-info {
+            background-color: #2196f3;
+            color: #fff;
+        }
+
+        /* 模態框 */
+        .layui-layer {
+            z-index: 9999;
+        }
+
+        /* 響應式 */
+        @media (max-width: 768px) {
+            .layui-side {
+                width: 0;
+                z-index: -1;
+            }
+
+            .layui-body {
+                margin-left: 0;
+            }
+
+            .stats-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .pagination-box {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* 加載狀態 */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #012e7d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部導航欄 -->
+    <div class="layui-header" style="height: 60px;">
+        <div class="header-logo">
+            <span>📦</span>
+            <span>榕台海峽快運</span>
+        </div>
+        <div class="header-right">
+            <div class="admin-info">
+                <span id="adminName">管理員</span>
+                <i class="layui-icon layui-icon-user"></i>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">登出</button>
+        </div>
+    </div>
+
+    <!-- 側邊欄導航 -->
+    <div class="layui-side">
+        <div class="layui-side-scroll">
+            <div class="nav-title">主菜單</div>
+            <div class="nav-item active" onclick="switchTab('overview')">
+                <i class="layui-icon layui-icon-dashboard"></i> 儀表板
+            </div>
+            <div class="nav-item" onclick="switchTab('users')">
+                <i class="layui-icon layui-icon-user"></i> 會員管理
+            </div>
+            <div class="nav-item" onclick="switchTab('orders')">
+                <i class="layui-icon layui-icon-unlink"></i> 訂單管理
+            </div>
+            <div class="nav-item" onclick="switchTab('parcels')">
+                <i class="layui-icon layui-icon-cellphone"></i> 包裹管理
+            </div>
+            
+            <div class="nav-title">系統</div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <i class="layui-icon layui-icon-set"></i> 系統設置
+            </div>
+            <div class="nav-item" onclick="switchTab('about')">
+                <i class="layui-icon layui-icon-about"></i> 關於系統
+            </div>
+        </div>
+    </div>
+
+    <!-- 主內容區域 -->
+    <div class="layui-body">
+        <!-- 儀表板 -->
+        <div id="overview" class="tab-content">
+            <h2 class="content-title">儀表板</h2>
+            
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-md3">
+                    <div class="stats-card">
+                        <div class="stats-card-content">
+                            <div class="stats-card-title">會員總數</div>
+                            <div class="stats-card-number" id="totalUsers">-</div>
+                        </div>
+                        <div class="stats-card-icon">👥</div>
+                    </div>
+                </div>
+
+                <div class="layui-col-md3">
+                    <div class="stats-card">
+                        <div class="stats-card-content">
+                            <div class="stats-card-title">訂單總數</div>
+                            <div class="stats-card-number" id="totalOrders">-</div>
+                        </div>
+                        <div class="stats-card-icon">📦</div>
+                    </div>
+                </div>
+
+                <div class="layui-col-md3">
+                    <div class="stats-card">
+                        <div class="stats-card-content">
+                            <div class="stats-card-title">包裹總數</div>
+                            <div class="stats-card-number" id="totalParcels">-</div>
+                        </div>
+                        <div class="stats-card-icon">📭</div>
+                    </div>
+                </div>
+
+                <div class="layui-col-md3">
+                    <div class="stats-card">
+                        <div class="stats-card-content">
+                            <div class="stats-card-title">系統狀態</div>
+                            <div class="stats-card-number" style="color: #4caf50; font-size: 24px;">
+                                <span class="layui-badge badge-success">正常</span>
+                            </div>
+                        </div>
+                        <div class="stats-card-icon">✓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 會員管理 -->
+        <div id="users" class="tab-content" style="display: none;">
+            <h2 class="content-title">會員管理</h2>
+            
+            <div class="content-box">
+                <div class="search-box">
+                    <input type="text" id="userSearch" placeholder="搜尋會員：用戶名、手機或郵箱..." />
+                    <button onclick="searchUsers()">搜尋</button>
+                    <button onclick="resetUserSearch()" style="background-color: #999;">重置</button>
+                </div>
+
+                <table id="userTable" class="layui-table" lay-filter="userTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th lay-data="{field:'id', width:80, align:'center'}">ID</th>
+                            <th lay-data="{field:'username', width:120}">用戶名</th>
+                            <th lay-data="{field:'phone', width:130}">手機</th>
+                            <th lay-data="{field:'email', width:180}">郵箱</th>
+                            <th lay-data="{field:'real_name', width:100}">姓名</th>
+                            <th lay-data="{field:'address', width:200}">地址</th>
+                            <th lay-data="{field:'created_at', width:140}">註冊日期</th>
+                            <th lay-data="{field:'action', width:100, align:'center', toolbar: '#userActions'}">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- 數據由 JavaScript 填充 -->
+                    </tbody>
+                </table>
+
+                <div class="pagination-box">
+                    <div class="pagination-info">
+                        顯示第 <span id="tableStart">1</span> 到 <span id="tableEnd">10</span> 條，共 
+                        <span id="totalCount">0</span> 條記錄
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" onclick="goToFirstPage()">首頁</button>
+                        <button class="page-btn" onclick="goToPrevPage()">上一頁</button>
+                        
+                        <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+                        
+                        <button class="page-btn" onclick="goToNextPage()">下一頁</button>
+                        <button class="page-btn" onclick="goToLastPage()">末頁</button>
+                        
+                        <input type="number" id="jumpPage" min="1" style="width: 50px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;" placeholder="跳轉"/>
+                        <button class="page-btn" onclick="jumpToPage()">跳轉</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 訂單管理 -->
+        <div id="orders" class="tab-content" style="display: none;">
+            <h2 class="content-title">訂單管理</h2>
+            
+            <div class="content-box">
+                <table id="orderTable" class="layui-table" lay-filter="orderTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th lay-data="{field:'id', width:100, align:'center'}">訂單ID</th>
+                            <th lay-data="{field:'user_id', width:100}">會員ID</th>
+                            <th lay-data="{field:'total_amount', width:120}">金額</th>
+                            <th lay-data="{field:'status', width:100}">狀態</th>
+                            <th lay-data="{field:'created_at', width:140}">建立日期</th>
+                            <th lay-data="{field:'action', width:120, align:'center'}">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody">
+                        <!-- 數據由 JavaScript 填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 包裹管理 -->
+        <div id="parcels" class="tab-content" style="display: none;">
+            <h2 class="content-title">包裹管理</h2>
+            
+            <div class="content-box">
+                <p style="color: #999; text-align: center; padding: 40px;">準備中...</p>
+            </div>
+        </div>
+
+        <!-- 系統設置 -->
+        <div id="settings" class="tab-content" style="display: none;">
+            <h2 class="content-title">系統設置</h2>
+            
+            <div class="content-box">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">系統名稱</label>
+                    <input type="text" value="榕台海峽快運管理系統" style="width: 100%; max-width: 400px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" />
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">系統描述</label>
+                    <textarea style="width: 100%; max-width: 600px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-height: 100px;">專業的集運物流管理系統，為客戶提供高效、可靠的服務。</textarea>
+                </div>
+
+                <button class="search-box button" style="background-color: #4caf50; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    保存設置
+                </button>
+            </div>
+        </div>
+
+        <!-- 關於系統 -->
+        <div id="about" class="tab-content" style="display: none;">
+            <h2 class="content-title">關於系統</h2>
+            
+            <div class="content-box">
+                <div style="text-align: center; padding: 40px;">
+                    <h3 style="margin-bottom: 20px;">榕台海峽快運管理系統</h3>
+                    <p style="color: #666; margin-bottom: 10px;">版本: 2.0.0</p>
+                    <p style="color: #999; margin-bottom: 20px;">前端框架: React 19 + Layui v2.13.3</p>
+                    <p style="color: #999;">© 2026 榕台海峽快運 版權所有</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按鈕模板 -->
+    <script type="text/html" id="userActions">
+        <button class="action-btn" onclick="editUser({{d.id}})">編輯</button>
+        <button class="action-btn danger" onclick="deleteUser({{d.id}})">刪除</button>
+    </script>
+
+    <!-- Layui 腳本 -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        // 全局變量
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+        let totalUsers = 0;
+        let adminToken = localStorage.getItem('adminToken');
+
+        // Layui 初始化
+        layui.use(['table', 'form', 'layer', 'element'], function() {
+            const table = layui.table;
+            const form = layui.form;
+            const layer = layui.layer;
+            const element = layui.element;
+
+            // 初始化管理員信息
+            const adminUser = localStorage.getItem('adminUser');
+            if (adminUser) {
+                const user = JSON.parse(adminUser);
+                document.getElementById('adminName').textContent = user.username || '管理員';
+            } else {
+                window.location.href = '/admin/login';
+            }
+
+            // 載入統計數據
+            loadStats();
+            
+            // 載入會員數據
+            loadUsers();
+        });
+
+        // 切換選項卡
+        function switchTab(tabName) {
+            // 隱藏所有選項卡
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // 顯示選中的選項卡
+            document.getElementById(tabName).style.display = 'block';
+            event.target.closest('.nav-item').classList.add('active');
+
+            // 根據選項卡加載數據
+            if (tabName === 'users') {
+                loadUsers();
+            } else if (tabName === 'orders') {
+                loadOrders();
+            }
+        }
+
+        // 載入統計數據
+        async function loadStats() {
+            try {
+                const response = await fetch('http://localhost:3001/api/admin/users', {
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+                
+                document.getElementById('totalUsers').textContent = (data.pagination?.total || 0).toLocaleString();
+                
+                const ordersResponse = await fetch('http://localhost:3001/api/admin/orders', {
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                });
+                const ordersData = await ordersResponse.json();
+                
+                document.getElementById('totalOrders').textContent = (ordersData.pagination?.total || 0).toLocaleString();
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // 載入會員數據
+        async function loadUsers() {
+            try {
+                const response = await fetch(`http://localhost:3001/api/admin/users?page=${currentPage}&limit=${pageSize}`, {
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                const users = data.data || [];
+                totalUsers = data.pagination?.total || 0;
+                totalPages = data.pagination?.pages || 1;
+
+                // 清空表格
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+
+                // 填充表格數據
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="text-align: center;">${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td>${user.email || '-'}</td>
+                        <td>${user.real_name || '-'}</td>
+                        <td>${user.address || '-'}</td>
+                        <td>${new Date(user.created_at).toLocaleDateString('zh-TW')}</td>
+                        <td style="text-align: center;">
+                            <button class="action-btn" onclick="editUser(${user.id})">編輯</button>
+                            <button class="action-btn danger" onclick="deleteUser(${user.id})">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // 更新分頁信息
+                updatePagination();
+            } catch (err) {
+                console.error('Error loading users:', err);
+            }
+        }
+
+        // 載入訂單數據
+        async function loadOrders() {
+            try {
+                const response = await fetch('http://localhost:3001/api/admin/orders', {
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+
+                const orders = data.data || [];
+                const tbody = document.getElementById('orderTableBody');
+                tbody.innerHTML = '';
+
+                orders.forEach(order => {
+                    const statusBadge = getStatusBadge(order.status);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="text-align: center;">${order.id}</td>
+                        <td>${order.user_id}</td>
+                        <td>$${order.total_amount.toFixed(2)} ${order.currency}</td>
+                        <td>${statusBadge}</td>
+                        <td>${new Date(order.created_at).toLocaleDateString('zh-TW')}</td>
+                        <td style="text-align: center;">
+                            <button class="action-btn" onclick="editOrder(${order.id})">詳情</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error loading orders:', err);
+            }
+        }
+
+        // 更新分頁控件
+        function updatePagination() {
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalUsers);
+
+            document.getElementById('tableStart').textContent = start;
+            document.getElementById('tableEnd').textContent = end;
+            document.getElementById('totalCount').textContent = totalUsers.toLocaleString();
+
+            // 生成頁碼按鈕
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+
+            const maxButtons = 5;
+            const start_page = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            const end_page = Math.min(totalPages, start_page + maxButtons - 1);
+
+            for (let i = start_page; i <= end_page; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                btn.textContent = i;
+                btn.onclick = () => goToPage(i);
+                pageNumbers.appendChild(btn);
+            }
+        }
+
+        // 分頁函數
+        function goToPage(page) {
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                loadUsers();
+            }
+        }
+
+        function goToFirstPage() { goToPage(1); }
+        function goToPrevPage() { goToPage(currentPage - 1); }
+        function goToNextPage() { goToPage(currentPage + 1); }
+        function goToLastPage() { goToPage(totalPages); }
+
+        function jumpToPage() {
+            const page = parseInt(document.getElementById('jumpPage').value);
+            if (page >= 1 && page <= totalPages) {
+                goToPage(page);
+                document.getElementById('jumpPage').value = '';
+            } else {
+                alert(`請輸入 1 到 ${totalPages} 之間的頁碼`);
+            }
+        }
+
+        // 搜尋會員
+        function searchUsers() {
+            const query = document.getElementById('userSearch').value.trim();
+            if (!query) {
+                loadUsers();
+                return;
+            }
+
+            // 這裡可以添加搜尋API調用
+            alert('搜尋功能：搜尋: ' + query);
+        }
+
+        function resetUserSearch() {
+            document.getElementById('userSearch').value = '';
+            currentPage = 1;
+            loadUsers();
+        }
+
+        // 用戶操作
+        function editUser(id) {
+            alert('編輯用戶 ID: ' + id);
+        }
+
+        function deleteUser(id) {
+            if (confirm('確定要刪除此用戶嗎？')) {
+                fetch(`http://localhost:3001/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${adminToken}` }
+                }).then(res => {
+                    if (res.ok) {
+                        alert('用戶已刪除');
+                        loadUsers();
+                    }
+                }).catch(err => console.error('刪除失敗:', err));
+            }
+        }
+
+        function editOrder(id) {
+            alert('查看訂單詳情 ID: ' + id);
+        }
+
+        // 登出
+        function handleLogout() {
+            if (confirm('確定要登出嗎？')) {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/login';
+            }
+        }
+
+        // 狀態徽章
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="layui-badge badge-warning">待處理</span>',
+                'processing': '<span class="layui-badge badge-info">處理中</span>',
+                'shipped': '<span class="layui-badge badge-info">已發貨</span>',
+                'delivered': '<span class="layui-badge badge-success">已交付</span>',
+                'cancelled': '<span class="layui-badge badge-danger">已取消</span>'
+            };
+            return badges[status] || '<span class="layui-badge">' + status + '</span>';
+        }
+    </script>
+</body>
+</html>
