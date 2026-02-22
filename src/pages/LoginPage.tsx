@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 
@@ -9,6 +9,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberPassword, setRememberPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // 页面加载时恢复保存的用户名和密码
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('savedUsername');
+    const savedPassword = localStorage.getItem('savedPassword');
+    const isRemembered = localStorage.getItem('rememberPassword') === 'true';
+    
+    if (savedUsername) {
+      setUsername(savedUsername);
+    }
+    if (savedPassword && isRemembered) {
+      setPassword(savedPassword);
+      setRememberPassword(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +34,19 @@ export default function LoginPage() {
     
     try {
       await login(username, password);
+      
+      // 保存用户名
+      localStorage.setItem('savedUsername', username);
+      
+      // 根据"记住密码"状态保存或清除密码
+      if (rememberPassword) {
+        localStorage.setItem('savedPassword', password);
+        localStorage.setItem('rememberPassword', 'true');
+      } else {
+        localStorage.removeItem('savedPassword');
+        localStorage.setItem('rememberPassword', 'false');
+      }
+      
       navigate('/home');
     } catch (err: any) {
       setError(err.message || '登录失败');
@@ -96,15 +126,30 @@ export default function LoginPage() {
               <input 
                 className="flex-1 h-full px-4 text-slate-800 bg-white border-none focus:ring-0 placeholder:text-slate-400 text-sm tracking-wide outline-none" 
                 placeholder="登入密碼" 
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="w-12 h-full flex items-center justify-center bg-white border-l border-slate-100 text-slate-400 hover:text-[#f58220] transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
 
             <div className="flex items-center justify-between px-1 pt-1">
               <label className="flex items-center space-x-2 cursor-pointer group">
-                <input className="peer h-3.5 w-3.5 rounded border-slate-500 bg-transparent text-[#f58220] focus:ring-[#f58220] focus:ring-offset-0 transition-all" id="remember" type="checkbox"/>
+                <input 
+                  className="peer h-3.5 w-3.5 rounded border-slate-500 bg-transparent text-[#f58220] focus:ring-[#f58220] focus:ring-offset-0 transition-all" 
+                  id="remember" 
+                  type="checkbox"
+                  checked={rememberPassword}
+                  onChange={(e) => setRememberPassword(e.target.checked)}
+                />
                 <span className="text-xs text-slate-400 group-hover:text-white transition-colors">記住密碼</span>
               </label>
               <a className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1" href="#">

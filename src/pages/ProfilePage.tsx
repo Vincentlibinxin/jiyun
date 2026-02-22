@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../lib/auth';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <div className="bg-[#0f1012] font-display text-white antialiased overflow-x-hidden min-h-full relative">
@@ -99,6 +101,18 @@ export default function ProfilePage() {
               </div>
               <span className="material-symbols-outlined text-gray-600 group-hover:text-[#f48c25] group-hover:translate-x-1 transition-all text-[18px]">chevron_right</span>
             </a>
+            <button onClick={() => {
+              logout();
+              navigate('/login');
+            }} className="w-full flex items-center justify-between p-3.5 hover:bg-white/5 transition-colors group cursor-pointer border-t border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center group-hover:border-red-500/50 transition-colors">
+                  <span className="material-symbols-outlined text-white/80 group-hover:text-red-500 transition-colors text-[18px]">logout</span>
+                </div>
+                <span className="text-sm font-medium text-white/90 group-hover:text-red-500 transition-colors">退出登入</span>
+              </div>
+              <span className="material-symbols-outlined text-gray-600 group-hover:text-red-500 group-hover:translate-x-1 transition-all text-[18px]">chevron_right</span>
+            </button>
           </div>
         </div>
       </div>
