@@ -7,6 +7,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
@@ -137,7 +138,7 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      await register(username, password, phone);
+      await register(username, password, phone, email);
       navigate('/register-success');
     } catch (err: any) {
       console.error('注册错误:', err);
@@ -195,6 +196,25 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-[#f48c25]"></span>
+              郵箱 <span className="text-[8px] text-slate-500">(選填)</span>
+            </label>
+            <div className="relative group">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#f48c25] transition-colors z-10">
+                <span className="material-symbols-outlined text-[18px]">mail</span>
+              </span>
+              <input 
+                className="w-full pl-9 pr-4 py-3 bg-white text-slate-900 rounded-lg outline-none focus:ring-2 focus:ring-[#f48c25]/50 transition-all placeholder:text-slate-400 text-sm font-medium shadow-sm" 
+                placeholder="example@domain.com" 
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
