@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import { authMiddleware } from './middleware/auth';
@@ -9,6 +10,8 @@ import { getUserById } from './db';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:5173', 'http://192.168.1.35:3000'],
@@ -18,7 +21,7 @@ app.use(cors({
 app.use(express.json());
 
 // 提供靜態文件服務（Layui 資源和管理系統 HTML）
-app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);

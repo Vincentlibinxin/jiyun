@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 const dbPath = path.join(process.cwd(), 'data.db');
 const db = new Database(dbPath);
@@ -145,6 +146,10 @@ export const updateAdminLastLogin = db.prepare(`
   UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?
 `);
 
+const getAdminCount = db.prepare(`
+  SELECT COUNT(*) as count FROM admin_users
+`);
+
 // User management (for admin dashboard)
 export const getAllUsers = db.prepare(`
   SELECT id, username, phone, email, real_name, address, created_at, updated_at 
@@ -197,5 +202,16 @@ export const getAllOrders = db.prepare(`
 export const updateOrderStatus = db.prepare(`
   UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
 `);
+
+const adminCount = (getAdminCount.get() as { count: number }).count;
+if (adminCount === 0) {
+  const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
+  const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Admin123456';
+  const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com';
+  const hashed = bcrypt.hashSync(defaultPassword, 10);
+
+  createAdmin.run(defaultUsername, hashed, defaultEmail, 'admin');
+  console.log(`[Admin Init] Created default admin account: ${defaultUsername}`);
+}
 
 export default db;
