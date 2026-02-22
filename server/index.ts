@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth';
+import adminRoutes from './routes/admin';
 import { authMiddleware } from './middleware/auth';
 import { getUserById } from './db';
 
@@ -16,6 +17,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/user/profile', authMiddleware, async (req: any, res) => {
   try {
