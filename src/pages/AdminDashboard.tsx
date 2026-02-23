@@ -10,6 +10,7 @@ interface User {
   real_name: string | null;
   address: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface Order {
@@ -197,27 +198,27 @@ export default function AdminDashboard() {
     : orders;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 text-sm">
       {/* 頂部導航欄 */}
-      <header className="fixed top-0 left-0 right-0 z-50 overflow-hidden h-20 bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] text-white shadow-sm border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 overflow-hidden h-14 bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] text-white shadow-sm border-b border-white/10">
          <div className="absolute inset-0 opacity-40 bg-[size:40px_40px] bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)]"></div>
          <div className="absolute w-[150%] h-[150%] rounded-[40%] border border-white/5 top-[-25%] left-[-25%] animate-[spin_60s_linear_infinite] pointer-events-none"></div>
 
-        <div className="relative max-w-full px-6 h-full flex justify-between items-center z-10">
-          <div className="flex items-center gap-8">
+        <div className="relative max-w-full px-3 h-full flex justify-between items-center z-10">
+          <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-widest drop-shadow-md">物流管理系统</h1>
+              <h1 className="text-lg font-bold text-white tracking-wide drop-shadow-md">物流管理系统</h1>
               <p className="text-slate-400 text-xs tracking-wider">RongTai</p>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-slate-200 font-medium">{adminUser?.username}</p>
+              <p className="text-slate-200 text-sm font-medium">{adminUser?.username}</p>
               <p className="text-slate-500 text-xs">管理員</p>
             </div>
             <button
               onClick={handleLogout}
-              className="px-6 py-2 bg-red-600/80 hover:bg-red-500 text-white rounded font-medium transition-colors backdrop-blur-sm border border-red-500/30"
+              className="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded text-xs font-medium transition-colors backdrop-blur-sm border border-red-500/30"
             >
               登出
             </button>
@@ -225,13 +226,13 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <div className="flex pt-20">
+      <div className="flex pt-14">
         {/* 側邊導航欄 */}
-        <aside className="fixed top-20 left-0 bottom-0 w-36 bg-white border-r border-gray-200 overflow-y-auto">
-          <nav className="py-6 space-y-1">
+        <aside className="fixed top-14 left-0 bottom-0 w-28 bg-[#FCFCFC] border-r border-gray-200 overflow-y-auto">
+          <nav className="py-3 space-y-0.5">
             <button
               onClick={() => { setActiveMenu('overview'); setActiveTab('overview'); }}
-              className={`w-full text-left px-6 py-3 font-medium transition-colors ${
+              className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
                 activeMenu === 'overview'
                   ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
                   : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
@@ -241,7 +242,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => { setActiveMenu('users'); setActiveTab('users'); }}
-              className={`w-full text-left px-6 py-3 font-medium transition-colors ${
+              className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
                 activeMenu === 'users'
                   ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
                   : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
@@ -251,7 +252,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => { setActiveMenu('orders'); setActiveTab('orders'); }}
-              className={`w-full text-left px-6 py-3 font-medium transition-colors ${
+              className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
                 activeMenu === 'orders'
                   ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
                   : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
@@ -259,12 +260,12 @@ export default function AdminDashboard() {
             >
               訂單管理
             </button>
-            <div className="pt-6 mt-2 border-t border-gray-200">
-              <p className="text-gray-500 text-xs font-semibold uppercase px-6 mb-3">其他</p>
-              <button className="w-full text-left px-6 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-l-4 border-transparent">
+            <div className="pt-3 mt-1.5 border-t border-gray-200">
+              <p className="text-gray-500 text-xs font-semibold uppercase px-3 mb-1.5">其他</p>
+              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-l-4 border-transparent">
                 系統設置
               </button>
-              <button className="w-full text-left px-6 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-l-4 border-transparent">
+              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-l-4 border-transparent">
                 關於系統
               </button>
             </div>
@@ -272,52 +273,52 @@ export default function AdminDashboard() {
         </aside>
 
         {/* 主要內容區域 */}
-        <main className="flex-1 ml-36 min-h-[calc(100vh-80px)] overflow-y-auto bg-gray-100 p-3">
+        <main className="flex-1 ml-28 min-h-[calc(100vh-56px)] overflow-y-auto bg-gray-100 p-1.5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded mb-4">
               {error}
             </div>
           )}
 
           {/* 概覽頁面 */}
           {activeTab === 'overview' && (
-            <div className="space-y-6 px-3">
+            <div className="space-y-3 px-1.5">
               {/* 統計卡片 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-white rounded p-3 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-500 text-sm font-medium">會員總數</p>
-                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.totalUsers}</p>
-                      <p className="text-gray-400 text-xs mt-2">↑ 12% 對比上週</p>
+                      <p className="text-2xl font-bold text-gray-800 mt-0.5">{stats.totalUsers}</p>
+                      <p className="text-gray-400 text-xs mt-1.5">↑ 12% 對比上週</p>
                     </div>
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl">
                       👥
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-white rounded p-3 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-500 text-sm font-medium">訂單總數</p>
-                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.totalOrders}</p>
-                      <p className="text-gray-400 text-xs mt-2">↑ 8% 對比上週</p>
+                      <p className="text-2xl font-bold text-gray-800 mt-0.5">{stats.totalOrders}</p>
+                      <p className="text-gray-400 text-xs mt-1.5">↑ 8% 對比上週</p>
                     </div>
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl">
                       📦
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <div className="bg-white rounded p-3 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-500 text-sm font-medium">包裹總數</p>
-                      <p className="text-4xl font-bold text-gray-800 mt-2">{stats.totalParcels}</p>
-                      <p className="text-gray-400 text-xs mt-2">↑ 5% 對比上週</p>
+                      <p className="text-2xl font-bold text-gray-800 mt-0.5">{stats.totalParcels}</p>
+                      <p className="text-gray-400 text-xs mt-1.5">↑ 5% 對比上週</p>
                     </div>
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-3xl">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-xl">
                       🎁
                     </div>
                   </div>
@@ -325,28 +326,28 @@ export default function AdminDashboard() {
               </div>
 
               {/* 系統資訊 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">系統狀態</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-white rounded p-3 shadow-sm border border-gray-200">
+                  <h3 className="text-sm font-bold text-gray-800 mb-2">系統狀態</h3>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between p-1.5 bg-gray-50 rounded">
                       <span className="text-gray-700 font-medium">API 伺服器</span>
                       <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">正常運行</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div className="flex items-center justify-between p-1.5 bg-gray-50 rounded">
                       <span className="text-gray-700 font-medium">數據庫連接</span>
                       <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">正常運行</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div className="flex items-center justify-between p-1.5 bg-gray-50 rounded">
                       <span className="text-gray-700 font-medium">應用狀態</span>
                       <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">運行中</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">快速概覽統計</h3>
-                  <div className="space-y-3">
+                <div className="bg-white rounded p-3 shadow-sm border border-gray-200">
+                  <h3 className="text-sm font-bold text-gray-800 mb-2">快速概覽統計</h3>
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">今日新增用戶</span>
                       <span className="font-bold text-blue-600">+{Math.floor(stats.totalUsers * 0.15)}</span>
@@ -371,8 +372,8 @@ export default function AdminDashboard() {
           {activeTab === 'users' && (
             <div>
               {/* 搜尋欄 */}
-              <div className="fixed top-20 left-36 right-0 z-40 px-3 bg-gray-100/95 backdrop-blur-sm min-h-[96px] flex items-end pb-1">
-                <div className="w-full bg-white p-4 border border-gray-200">
+              <div className="fixed top-14 left-28 right-0 z-40 px-1.5 bg-gray-100/95 backdrop-blur-sm min-h-[60px] flex items-end pb-0.5">
+                <div className="w-full bg-white p-2.5 border border-gray-200">
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -380,11 +381,11 @@ export default function AdminDashboard() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
                       placeholder="搜尋會員：用戶名、手機號或郵箱..."
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                     <button
                       onClick={searchUsers}
-                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-medium transition-colors"
+                      className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
                     >
                       搜尋
                     </button>
@@ -393,7 +394,7 @@ export default function AdminDashboard() {
                         setSearchQuery('');
                         fetchUsers();
                       }}
-                      className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-medium transition-colors"
+                      className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs font-medium transition-colors"
                     >
                       重置
                     </button>
@@ -402,48 +403,54 @@ export default function AdminDashboard() {
               </div>
 
               {/* 用戶表格 */}
-              <div className="bg-white border border-gray-200 overflow-hidden" style={{marginTop: '84px'}}>
-                <div className="max-h-[calc(100vh-256px)] overflow-y-auto">
+              <div className="bg-white border border-gray-200 overflow-hidden pb-0" style={{marginTop: '54px'}}>
+                <div className="max-h-[calc(100vh-183px)] overflow-y-auto">
                   <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-gray-100 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">用戶名</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">手機</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">郵箱</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">姓名</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">註冊日期</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">操作</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">ID</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">用戶名</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">手機</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">郵箱</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">姓名</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">地址</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">註冊日期</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">更新日期</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {loading ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={9} className="px-3 py-2.5 text-center text-gray-500">
                           加載中...
                         </td>
                       </tr>
                     ) : users.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={9} className="px-3 py-2.5 text-center text-gray-500">
                           沒有用戶記錄
                         </td>
                       </tr>
                     ) : (
                       users.map(user => (
                         <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-gray-700 font-medium">{user.id}</td>
-                          <td className="px-6 py-4 text-gray-700">{user.username}</td>
-                          <td className="px-6 py-4 text-gray-700">{user.phone || '-'}</td>
-                          <td className="px-6 py-4 text-gray-700 text-sm">{user.email || '-'}</td>
-                          <td className="px-6 py-4 text-gray-700">{user.real_name || '-'}</td>
-                          <td className="px-6 py-4 text-gray-500 text-sm">
+                          <td className="px-3 py-2.5 text-gray-700 font-medium text-sm">{user.id}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-sm">{user.username}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-sm">{user.phone || '-'}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-xs">{user.email || '-'}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-sm">{user.real_name || '-'}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-xs">{user.address || '-'}</td>
+                          <td className="px-3 py-2.5 text-gray-500 text-xs">
                             {new Date(user.created_at).toLocaleDateString('zh-TW')}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2.5 text-gray-500 text-xs">
+                            {new Date(user.updated_at).toLocaleDateString('zh-TW')}
+                          </td>
+                          <td className="px-3 py-2.5">
                             <button
                               onClick={() => deleteUser(user.id)}
-                              className="px-4 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded text-sm font-medium transition-colors"
+                              className="px-2.5 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded text-xs font-medium transition-colors"
                             >
                               刪除
                             </button>
@@ -458,7 +465,7 @@ export default function AdminDashboard() {
 
               {/* 分頁控件 */}
               {users.length > 0 && (
-                <div className="fixed bottom-0 left-36 right-0 z-40 px-3 bg-gray-100/95 backdrop-blur-sm min-h-[80px] flex items-start pt-1">
+                <div className="fixed bottom-0 left-28 right-0 z-40 px-1.5 bg-gray-100/95 backdrop-blur-sm min-h-[54px] flex items-start">
                   <div className="w-full">
                     <Pagination
                       currentPage={currentPage}
@@ -478,19 +485,19 @@ export default function AdminDashboard() {
           {/* 訂單管理頁面 */}
           {activeTab === 'orders' && (
             <div>
-              <div className="fixed top-20 left-36 right-0 z-40 px-3 bg-gray-100/95 backdrop-blur-sm min-h-[96px] flex items-end pb-1">
-                <div className="w-full bg-white p-4 border border-gray-200">
+              <div className="fixed top-14 left-28 right-0 z-40 px-1.5 bg-gray-100/95 backdrop-blur-sm min-h-[60px] flex items-end pb-0.5">
+                <div className="w-full bg-white p-2.5 border border-gray-200">
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={orderSearchQuery}
                       onChange={(e) => setOrderSearchQuery(e.target.value)}
                       placeholder="搜尋訂單：訂單ID、會員ID或狀態..."
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                     <button
                       onClick={() => setOrderSearchQuery('')}
-                      className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded font-medium transition-colors"
+                      className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs font-medium transition-colors"
                     >
                       清除
                     </button>
@@ -498,45 +505,45 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 overflow-hidden" style={{marginTop: '72px'}}>
-                <div className="max-h-[calc(100vh-256px)] overflow-y-auto">
+              <div className="bg-white border border-gray-200 overflow-hidden pb-0" style={{marginTop: '54px'}}>
+                <div className="max-h-[calc(100vh-183px)] overflow-y-auto">
                   <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-gray-100 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">訂單ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">會員ID</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">金額</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">狀態</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">建立日期</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">操作</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">訂單ID</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">會員ID</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">金額</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">狀態</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">建立日期</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {ordersLoading ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={6} className="px-3 py-2.5 text-center text-gray-500">
                           加載中...
                         </td>
                       </tr>
                     ) : filteredOrders.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={6} className="px-3 py-2.5 text-center text-gray-500">
                           沒有訂單記錄
                         </td>
                       </tr>
                     ) : (
                       filteredOrders.map(order => (
                         <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-gray-700 font-medium">{order.id}</td>
-                          <td className="px-6 py-4 text-gray-700">{order.user_id}</td>
-                          <td className="px-6 py-4 text-gray-700 font-medium">
+                          <td className="px-3 py-2.5 text-gray-700 font-medium text-sm">{order.id}</td>
+                          <td className="px-3 py-2.5 text-gray-700 text-sm">{order.user_id}</td>
+                          <td className="px-3 py-2.5 text-gray-700 font-medium text-sm">
                             ${order.total_amount.toFixed(2)} {order.currency}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2.5">
                             <select
                               value={order.status}
                               onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                              className={`px-3 py-1 rounded text-sm font-medium border-0 focus:ring-2 focus:ring-blue-400 outline-none cursor-pointer ${
+                              className={`px-2.5 py-1 rounded text-xs font-medium border-0 focus:ring-2 focus:ring-blue-400 outline-none cursor-pointer ${
                                 statusColors[order.status] || 'bg-gray-100 text-gray-800'
                               }`}
                             >
@@ -547,11 +554,11 @@ export default function AdminDashboard() {
                               <option value="cancelled">已取消</option>
                             </select>
                           </td>
-                          <td className="px-6 py-4 text-gray-500 text-sm">
+                          <td className="px-3 py-2.5 text-gray-500 text-xs">
                             {new Date(order.created_at).toLocaleDateString('zh-TW')}
                           </td>
-                          <td className="px-6 py-4">
-                            <button className="px-4 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded text-sm font-medium transition-colors">
+                          <td className="px-3 py-2.5">
+                            <button className="px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded text-xs font-medium transition-colors">
                               詳情
                             </button>
                           </td>
@@ -564,7 +571,7 @@ export default function AdminDashboard() {
               </div>
 
               {orders.length > 0 && (
-                <div className="fixed bottom-0 left-36 right-0 z-40 px-3 bg-gray-100/95 backdrop-blur-sm min-h-[80px] flex items-start pt-1">
+                <div className="fixed bottom-0 left-28 right-0 z-40 px-1.5 bg-gray-100/95 backdrop-blur-sm min-h-[54px] flex items-start">
                   <div className="w-full">
                     <Pagination
                       currentPage={orderPage}
