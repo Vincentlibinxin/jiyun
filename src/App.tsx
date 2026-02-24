@@ -9,8 +9,6 @@ import ParcelsPage from '@/pages/ParcelsPage';
 import ForecastPage from '@/pages/ForecastPage';
 import QuotePage from '@/pages/QuotePage';
 import ProfilePage from '@/pages/ProfilePage';
-import AdminLoginPage from '@/pages/AdminLoginPage';
-import AdminDashboard from '@/pages/AdminDashboard';
 
 export default function App() {
   return (
@@ -20,9 +18,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/register-success" element={<RegisterSuccessPage />} />
-          
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           
           <Route element={<Layout />}>
             <Route path="/home" element={<HomePage />} />
