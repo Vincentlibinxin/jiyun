@@ -1,7 +1,16 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createUser, getUserByUsername, getUserByPhone, getUserById, createOTP, getOTP, verifyOTP, getLatestOTP } from '../db';
+import {
+  createUser,
+  getUserByUsername,
+  getUserByPhone,
+  getUserById,
+  createOTP,
+  getOTP,
+  verifyOTP,
+  getLatestOTP
+} from '../db';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'rongtai-secret-key-2026';
@@ -98,7 +107,7 @@ router.post('/send-sms', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 检查手机号是否已被注册
-    const existingUser = getUserByPhone.get(phone);
+    const existingUser = await getUserByPhone(phone);
     if (existingUser) {
       res.status(400).json({ error: '手机号已被注册' });
       return;
@@ -110,7 +119,7 @@ router.post('/send-sms', async (req: Request, res: Response): Promise<void> => {
 
     // 保存验证码到数据库
     try {
-      createOTP.run(phone, code, expiresAt.toISOString());
+      await createOTP(phone, code, expiresAt.toISOString());
       console.log(`OTP created for ${phone}: ${code}`);
     } catch (dbError) {
       console.error('Database error:', dbError);
@@ -150,14 +159,14 @@ router.post('/verify-code', async (req: Request, res: Response): Promise<void> =
     }
 
     // 查询验证码
-    const otp = getOTP.get(phone, code) as any;
+    const otp = await getOTP(phone, code);
     if (!otp) {
       res.status(400).json({ error: '验证码无效或已过期' });
       return;
     }
 
     // 标记验证码为已验证
-    verifyOTP.run(phone, code);
+    await verifyOTP(phone, code);
 
     res.json({ message: '验证码验证成功' });
   } catch (error) {
@@ -195,7 +204,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const existingUser = getUserByUsername.get(username);
+    const existingUser = await getUserByUsername(username);
     if (existingUser) {
       res.status(400).json({ error: '用户名已存在' });
       return;
@@ -208,14 +217,14 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         return;
       }
 
-      const existingPhone = getUserByPhone.get(phone);
+      const existingPhone = await getUserByPhone(phone);
       if (existingPhone) {
         res.status(400).json({ error: '手机号已被注册' });
         return;
       }
 
       // 检查手机号是否已验证
-      const latestOTP = getLatestOTP.get(phone) as any;
+      const latestOTP = await getLatestOTP(phone);
       
       if (!latestOTP || !latestOTP.verified) {
         res.status(400).json({ error: '请先验证手机号码' });
@@ -225,8 +234,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const result = createUser.run(username, hashedPassword, phone || null, email || null, null, null);
-    const userId = result.lastInsertRowid as number;
+    const userId = await createUser(username, hashedPassword, phone || null, email || null, null, null);
     const token = generateToken(userId);
 
     res.status(201).json({
@@ -254,7 +262,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = getUserByUsername.get(username) as any;
+    const user = await getUserByUsername(username);
     if (!user) {
       res.status(401).json({ error: '用户名或密码错误' });
       return;
@@ -297,7 +305,7 @@ router.get('/me', async (req: AuthRequest, res: Response): Promise<void> => {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     
-    const user = getUserById.get(decoded.userId) as any;
+    const user = await getUserById(decoded.userId);
     if (!user) {
       res.status(401).json({ error: '用户不存在' });
       return;

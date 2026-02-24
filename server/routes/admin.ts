@@ -5,11 +5,21 @@ import {
   createAdmin,
   getAdminByUsername,
   updateAdminLastLogin,
-  getAllUsers,
+  getAdminsPaged,
+  getAdminsCount,
+  updateAdminStatus,
+  deleteAdmin,
+  getSmsPaged,
+  getSmsCount,
+  getUsersPaged,
+  getUsersCount,
+  searchUsers,
   updateUser,
   deleteUser,
-  getAllOrders,
-  getAllParcels,
+  getOrdersPaged,
+  getOrdersCount,
+  getParcelsPaged,
+  getParcelsCount,
   updateOrderStatus,
   updateParcelStatus,
   getUserById
@@ -59,9 +69,14 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const admin = getAdminByUsername.get(username) as any;
+    const admin = await getAdminByUsername(username);
     if (!admin) {
       res.status(401).json({ error: '用户名或密码错误' });
+      return;
+    }
+
+    if (admin.status && admin.status !== 'active') {
+      res.status(403).json({ error: '账号已停用' });
       return;
     }
 
@@ -72,7 +87,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     }
 
     // 更新最后登录时间
-    updateAdminLastLogin.run(admin.id);
+    await updateAdminLastLogin(admin.id);
 
     const token = generateAdminToken(admin.id);
     res.json({
@@ -92,15 +107,16 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 });
 
 // 获取所有用户（分页）
-router.get('/users', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.get('/users', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    const allUsers = getAllUsers.all() as any[];
-    const total = allUsers.length;
-    const users = allUsers.slice(offset, offset + limit);
+    const [users, total] = await Promise.all([
+      getUsersPaged(limit, offset),
+      getUsersCount()
+    ]);
 
     res.json({
       data: users,
@@ -117,8 +133,35 @@ router.get('/users', adminAuthMiddleware, (req: AdminRequest, res: Response): vo
   }
 });
 
+// 获取短信验证码记录
+router.get('/sms', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      getSmsPaged(limit, offset),
+      getSmsCount()
+    ]);
+
+    res.json({
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get sms error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
 // 搜索用户
-router.get('/users/search', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.get('/users/search', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const keyword = req.query.q as string;
     if (!keyword) {
@@ -126,13 +169,7 @@ router.get('/users/search', adminAuthMiddleware, (req: AdminRequest, res: Respon
       return;
     }
 
-    const allUsers = getAllUsers.all() as any[];
-    const filtered = allUsers.filter(user =>
-      user.username?.toLowerCase().includes(keyword.toLowerCase()) ||
-      user.phone?.includes(keyword) ||
-      user.email?.toLowerCase().includes(keyword.toLowerCase()) ||
-      user.real_name?.toLowerCase().includes(keyword.toLowerCase())
-    );
+    const filtered = await searchUsers(keyword);
 
     res.json({
       data: filtered,
@@ -145,9 +182,9 @@ router.get('/users/search', adminAuthMiddleware, (req: AdminRequest, res: Respon
 });
 
 // 获取单个用户信息
-router.get('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.get('/users/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
-    const user = getUserById.get(parseInt(req.params.id)) as any;
+    const user = await getUserById(parseInt(req.params.id));
     if (!user) {
       res.status(404).json({ error: '用户不存在' });
       return;
@@ -163,18 +200,18 @@ router.get('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Response)
 });
 
 // 编辑用户信息
-router.put('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.put('/users/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const { real_name, address, email } = req.body;
     const userId = parseInt(req.params.id);
 
-    const user = getUserById.get(userId) as any;
+    const user = await getUserById(userId);
     if (!user) {
       res.status(404).json({ error: '用户不存在' });
       return;
     }
 
-    updateUser.run(real_name || null, address || null, email || null, userId);
+    await updateUser(real_name || null, address || null, email || null, userId);
 
     res.json({
       message: '用户信息已更新',
@@ -194,17 +231,17 @@ router.put('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Response)
 });
 
 // 删除用户
-router.delete('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.delete('/users/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const userId = parseInt(req.params.id);
-    const user = getUserById.get(userId) as any;
+    const user = await getUserById(userId);
 
     if (!user) {
       res.status(404).json({ error: '用户不存在' });
       return;
     }
 
-    deleteUser.run(userId);
+    await deleteUser(userId);
     res.json({ message: `用户 ${user.username} 已删除` });
   } catch (error) {
     console.error('Delete user error:', error);
@@ -213,15 +250,16 @@ router.delete('/users/:id', adminAuthMiddleware, (req: AdminRequest, res: Respon
 });
 
 // 获取所有订单
-router.get('/orders', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.get('/orders', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    const allOrders = getAllOrders.all() as any[];
-    const total = allOrders.length;
-    const orders = allOrders.slice(offset, offset + limit);
+    const [orders, total] = await Promise.all([
+      getOrdersPaged(limit, offset),
+      getOrdersCount()
+    ]);
 
     res.json({
       data: orders,
@@ -239,7 +277,7 @@ router.get('/orders', adminAuthMiddleware, (req: AdminRequest, res: Response): v
 });
 
 // 更新订单状态
-router.patch('/orders/:id', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.patch('/orders/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const { status } = req.body;
     const orderId = parseInt(req.params.id);
@@ -249,7 +287,7 @@ router.patch('/orders/:id', adminAuthMiddleware, (req: AdminRequest, res: Respon
       return;
     }
 
-    updateOrderStatus.run(status, orderId);
+    await updateOrderStatus(status, orderId);
     res.json({ message: '订单状态已更新', orderId, status });
   } catch (error) {
     console.error('Update order error:', error);
@@ -258,15 +296,16 @@ router.patch('/orders/:id', adminAuthMiddleware, (req: AdminRequest, res: Respon
 });
 
 // 获取所有包裹
-router.get('/parcels', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.get('/parcels', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    const allParcels = getAllParcels.all() as any[];
-    const total = allParcels.length;
-    const parcels = allParcels.slice(offset, offset + limit);
+    const [parcels, total] = await Promise.all([
+      getParcelsPaged(limit, offset),
+      getParcelsCount()
+    ]);
 
     res.json({
       data: parcels,
@@ -284,7 +323,7 @@ router.get('/parcels', adminAuthMiddleware, (req: AdminRequest, res: Response): 
 });
 
 // 更新包裹状态
-router.patch('/parcels/:id', adminAuthMiddleware, (req: AdminRequest, res: Response): void => {
+router.patch('/parcels/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
   try {
     const { status } = req.body;
     const parcelId = parseInt(req.params.id);
@@ -294,10 +333,104 @@ router.patch('/parcels/:id', adminAuthMiddleware, (req: AdminRequest, res: Respo
       return;
     }
 
-    updateParcelStatus.run(status, parcelId);
+    await updateParcelStatus(status, parcelId);
     res.json({ message: '包裹状态已更新', parcelId, status });
   } catch (error) {
     console.error('Update parcel error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 获取管理员列表
+router.get('/admins', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const [admins, total] = await Promise.all([
+      getAdminsPaged(limit, offset),
+      getAdminsCount()
+    ]);
+
+    res.json({
+      data: admins,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 新增管理员
+router.post('/admins', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
+  try {
+    const { username, password, email, role } = req.body;
+
+    if (!username || !password || !email) {
+      res.status(400).json({ error: '用户名、密码和邮箱不能为空' });
+      return;
+    }
+
+    const existing = await getAdminByUsername(username);
+    if (existing) {
+      res.status(409).json({ error: '管理员已存在' });
+      return;
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    const adminId = await createAdmin(username, hashed, email, role || 'admin');
+
+    res.status(201).json({
+      message: '管理员已创建',
+      admin: {
+        id: adminId,
+        username,
+        email,
+        role: role || 'admin',
+        status: 'active'
+      }
+    });
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 更新管理员状态
+router.patch('/admins/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
+  try {
+    const { status } = req.body;
+    const adminId = parseInt(req.params.id);
+
+    if (!status) {
+      res.status(400).json({ error: '状态不能为空' });
+      return;
+    }
+
+    await updateAdminStatus(status, adminId);
+    res.json({ message: '管理员状态已更新', adminId, status });
+  } catch (error) {
+    console.error('Update admin status error:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 删除管理员
+router.delete('/admins/:id', adminAuthMiddleware, async (req: AdminRequest, res: Response): Promise<void> => {
+  try {
+    const adminId = parseInt(req.params.id);
+
+    await deleteAdmin(adminId);
+    res.json({ message: '管理员已删除', adminId });
+  } catch (error) {
+    console.error('Delete admin error:', error);
     res.status(500).json({ error: '服务器错误' });
   }
 });
